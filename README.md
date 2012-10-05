@@ -1,4 +1,4 @@
-# XChat Plugin Interface for D
+# XChat Plugin Interface for the D Programming Language
 This is a binding for the XChat plugin interface, with an included example.
 The reference C header is included alongside the D interface.
 
@@ -14,4 +14,4 @@ project files for the example. The plugin DLL is output to the `bin` subdirector
 Move the DLL to the `plugins` directory of your XChat client to test it.
 
 ## License
-This project is public domain.
+*xchatd* is licensed under the terms of the MIT license (see the [LICENSE.txt](https://github.com/JakobOvrum/xchatd/blob/master/LICENSE.txt) file for details).
