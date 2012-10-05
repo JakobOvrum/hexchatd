@@ -46,9 +46,9 @@
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath />
+  <imppath>..\..</imppath>
   <fileImppath />
-  <outdir>..\bin</outdir>
+  <outdir>..\..\example\bin</outdir>
   <objdir>$(OutDir)</objdir>
   <objname />
   <libname />
@@ -138,7 +138,7 @@
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath />
+  <imppath>../../</imppath>
   <fileImppath />
   <outdir>..\bin</outdir>
   <objdir>$(OutDir)</objdir>
@@ -186,11 +186,11 @@
  </Config>
  <Folder name="capi">
   <Folder name="example">
-   <File path="..\example\autoop.d" />
-   <File path="..\example\dllmain.d" />
+   <File path="..\..\example\autoop.d" />
+   <File path="..\..\example\dllmain.d" />
   </Folder>
   <Folder name="xchat">
-   <File path="..\xchat\capi.d" />
+   <File path="..\..\xchat\capi.d" />
   </Folder>
  </Folder>
 </DProject>

@@ -10,7 +10,7 @@ compatibility with D string literals.
 ## Example
 See the `example` subdirectory for a port of the AutoOp example plugin found
 in the official documentation. The `visuald` subdirectory contains [VisualD](http://www.dsource.org/projects/visuald)
-project files for the example. The plugin DLL is output to the `bin` subdirectory.
+project files for the example. The plugin DLL is output to the `example/bin` subdirectory.
 Move the DLL to the `plugins` directory of your XChat client to test it.
 
 ## License

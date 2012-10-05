@@ -1,5 +1,5 @@
 # Example Binaries
-/bin
+example/bin
 
 # Visual Studio
 *.suo
