@@ -86,7 +86,7 @@
   <libpaths />
   <deffile />
   <resfile />
-  <exefile>$(OutDir)\$(ProjectName)-d.dll</exefile>
+  <exefile>$(OutDir)\autoop-capi-d.dll</exefile>
   <additionalOptions />
   <preBuildCommand />
   <postBuildCommand />
@@ -178,19 +178,19 @@
   <libpaths />
   <deffile />
   <resfile />
-  <exefile>$(OutDir)\$(ProjectName).dll</exefile>
+  <exefile>$(OutDir)\autoop-capi.dll</exefile>
   <additionalOptions />
   <preBuildCommand />
   <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
- <Folder name="autoop">
+ <Folder name="capi">
   <Folder name="example">
    <File path="..\example\autoop.d" />
    <File path="..\example\dllmain.d" />
   </Folder>
   <Folder name="xchat">
-   <File path="..\xchat\plugin.d" />
+   <File path="..\xchat\capi.d" />
   </Folder>
  </Folder>
 </DProject>

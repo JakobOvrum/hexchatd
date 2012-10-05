@@ -1,7 +1,7 @@
 // Ported from the AutoOp example plugin in the XChat plugin documentation.
 module example.autoop;
 
-import xchat.plugin;
+import xchat.capi;
 
 enum PNAME = "AutoOp";
 enum PDESC = "Auto Ops anyone that joins";

@@ -1,4 +1,4 @@
-module xchat.plugin;
+module xchat.capi;
 
 import core.stdc.time;
 import std.traits;

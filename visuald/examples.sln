@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "autoop", "autoop.visualdproj", "{BF9E8B0B-1FD1-4AB6-93B0-BE7911B1B76F}"
+Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "capi", "capi.visualdproj", "{BF9E8B0B-1FD1-4AB6-93B0-BE7911B1B76F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
