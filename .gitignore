@@ -1,5 +1,11 @@
+# Library Binaries
+/lib
+
 # Example Binaries
-example/bin
+/example/bin
 
 # Visual Studio
 *.suo
+
+# Development Environment (XChat Client)
+/devenv
