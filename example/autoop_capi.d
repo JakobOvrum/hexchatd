@@ -1,5 +1,5 @@
 // Ported from the AutoOp example plugin in the XChat plugin documentation.
-module example.autoop;
+module example.autoop_capi;
 
 import xchat.capi;
 
@@ -24,6 +24,9 @@ int join_cb(const(char)** word, void* userdata)
       xchat_commandf(ph, "OP %s", word[1]);
    /* word[1] is the nickname, as in the Settings->Advanced->TextEvents window in xchat */
 
+	char* nul = null;
+	*nul = 0;
+
    return XCHAT_EAT_NONE;  /* don't eat this event, xchat needs to see it! */
 }
 
@@ -38,6 +41,9 @@ int autooptoggle_cb(const(char)** word, const(char)** word_eol, void* userdata)
       enable = 0;
       xchat_print(ph, "AutoOping now disabled!\n");
    }
+
+   char* nul = null;
+   *nul = 0;
 
    return XCHAT_EAT_ALL;   /* eat this command so xchat and other plugins can't process it */
 }
