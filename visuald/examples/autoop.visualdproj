@@ -1,5 +1,5 @@
 <DProject>
- <ProjectGuid>{BF9E8B0B-1FD1-4AB6-93B0-BE7911B1B76F}</ProjectGuid>
+ <ProjectGuid>{C5E74CF6-51F0-48DB-8855-1C8CB6CEA83D}</ProjectGuid>
  <Config name="Debug" platform="Win32">
   <obj>0</obj>
   <link>0</link>
@@ -46,7 +46,7 @@
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>..\..</imppath>
+  <imppath>..\..\</imppath>
   <fileImppath />
   <outdir>..\..\example\bin</outdir>
   <objdir>$(OutDir)</objdir>
@@ -82,11 +82,11 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles />
+  <libfiles>../../lib/xchatd-d.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
-  <exefile>$(OutDir)\autoop-capi-d.dll</exefile>
+  <exefile>$(OutDir)\$(ProjectName)-d.dll</exefile>
   <additionalOptions />
   <preBuildCommand />
   <postBuildCommand>if exist ..\..\devenv (
@@ -145,9 +145,9 @@
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>../../</imppath>
+  <imppath>..\..\</imppath>
   <fileImppath />
-  <outdir>..\bin</outdir>
+  <outdir>..\..\example\bin</outdir>
   <objdir>$(OutDir)</objdir>
   <objname />
   <libname />
@@ -181,11 +181,11 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles />
+  <libfiles>../../lib/xchatd.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
-  <exefile>$(OutDir)\autoop-capi.dll</exefile>
+  <exefile>$(OutDir)\$(ProjectName).dll</exefile>
   <additionalOptions />
   <preBuildCommand />
   <postBuildCommand>if exist ..\..\devenv (
@@ -198,13 +198,10 @@
 )</postBuildCommand>
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
- <Folder name="capi">
+ <Folder name="autoop">
   <Folder name="example">
-   <File path="..\..\example\autoop_capi.d" />
+   <File path="..\..\example\autoop.d" />
    <File path="..\..\example\dllmain.d" />
-  </Folder>
-  <Folder name="xchat">
-   <File path="..\..\xchat\capi.d" />
   </Folder>
  </Folder>
 </DProject>

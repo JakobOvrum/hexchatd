@@ -1,9 +1,9 @@
 <DProject>
- <ProjectGuid>{BF9E8B0B-1FD1-4AB6-93B0-BE7911B1B76F}</ProjectGuid>
+ <ProjectGuid>{F0789573-0258-45D4-A57F-8DC2EDB3A749}</ProjectGuid>
  <Config name="Debug" platform="Win32">
   <obj>0</obj>
   <link>0</link>
-  <lib>2</lib>
+  <lib>1</lib>
   <subsystem>0</subsystem>
   <multiobj>0</multiobj>
   <singleFileCompilation>0</singleFileCompilation>
@@ -46,9 +46,9 @@
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>..\..</imppath>
+  <imppath>..</imppath>
   <fileImppath />
-  <outdir>..\..\example\bin</outdir>
+  <outdir>..\lib</outdir>
   <objdir>$(OutDir)</objdir>
   <objname />
   <libname />
@@ -86,23 +86,16 @@
   <libpaths />
   <deffile />
   <resfile />
-  <exefile>$(OutDir)\autoop-capi-d.dll</exefile>
+  <exefile>$(OutDir)\$(ProjectName)-d.lib</exefile>
   <additionalOptions />
   <preBuildCommand />
-  <postBuildCommand>if exist ..\..\devenv (
-    copy $(TARGETPATH) ..\..\devenv\config\addons\$(TARGETFILENAME)
-    if errorlevel 1 goto reportError
-    if exist $(TARGETDIR)\$(TARGETNAME).pdb (
-        copy $(TARGETDIR)\$(TARGETNAME).pdb ..\..\devenv\config\addons\$(TARGETNAME).pdb
-        if errorlevel 1 goto reportError
-    )
-)</postBuildCommand>
+  <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Config name="Release" platform="Win32">
   <obj>0</obj>
   <link>0</link>
-  <lib>2</lib>
+  <lib>1</lib>
   <subsystem>0</subsystem>
   <multiobj>0</multiobj>
   <singleFileCompilation>0</singleFileCompilation>
@@ -145,9 +138,9 @@
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>../../</imppath>
+  <imppath>..</imppath>
   <fileImppath />
-  <outdir>..\bin</outdir>
+  <outdir>..\lib</outdir>
   <objdir>$(OutDir)</objdir>
   <objname />
   <libname />
@@ -185,26 +178,16 @@
   <libpaths />
   <deffile />
   <resfile />
-  <exefile>$(OutDir)\autoop-capi.dll</exefile>
+  <exefile>$(OutDir)\$(ProjectName).lib</exefile>
   <additionalOptions />
   <preBuildCommand />
-  <postBuildCommand>if exist ..\..\devenv (
-    copy $(TARGETPATH) ..\..\devenv\config\addons\$(TARGETFILENAME)
-    if errorlevel 1 goto reportError
-    if exist $(TARGETDIR)\$(TARGETNAME).pdb (
-        copy $(TARGETDIR)\$(TARGETNAME).pdb ..\..\devenv\config\addons\$(TARGETNAME).pdb
-        if errorlevel 1 goto reportError
-    )
-)</postBuildCommand>
+  <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
- <Folder name="capi">
-  <Folder name="example">
-   <File path="..\..\example\autoop_capi.d" />
-   <File path="..\..\example\dllmain.d" />
-  </Folder>
+ <Folder name="xchatd">
   <Folder name="xchat">
-   <File path="..\..\xchat\capi.d" />
+   <File path="..\xchat\capi.d" />
+   <File path="..\xchat\plugin.d" />
   </Folder>
  </Folder>
 </DProject>

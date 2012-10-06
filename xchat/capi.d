@@ -32,20 +32,20 @@ struct xchat_list {}
 struct xchat_hook {}
 struct xchat_context {}
 
-alias extern(C) int function (const(char)** word, const(char)** word_eol, void *user_data) CommandCallback;
-alias extern(C) int function (const(char)** word, void *user_data) PrintCallback;
-alias extern(C) int function (void *user_data) TimerCallback;
-alias extern(C) int function (int fd, int flags, void *user_data) FileCallback;
+alias extern(C) int function (const(char)** word, const(char)** word_eol, void *user_data) xchat_cmd_cb;
+alias extern(C) int function (const(char)** word, void *user_data) xchat_print_cb;
+alias extern(C) int function (void *user_data) xchat_timer_cb;
+alias extern(C) int function (int fd, int flags, void *user_data) xchat_fd_cb;
 
 struct xchat_plugin
 {
 	// these are only used on win32
 	extern(C):
-	xchat_hook *function (xchat_plugin *ph, const char *name, int pri, CommandCallback callback, const char *help_text, void *userdata) xchat_hook_command;
-	xchat_hook *function (xchat_plugin *ph, const char *name, int pri, CommandCallback callback, void *userdata) xchat_hook_server;
-	xchat_hook *function (xchat_plugin *ph, const char *name, int pri, PrintCallback callback, void *userdata) xchat_hook_print;
-	xchat_hook *function (xchat_plugin *ph, int timeout, TimerCallback callback, void *userdata) xchat_hook_timer;
-	xchat_hook *function (xchat_plugin *ph, int fd, int flags, FileCallback callback, void *userdata) xchat_hook_fd;
+	xchat_hook *function (xchat_plugin *ph, const char *name, int pri, xchat_cmd_cb callback, const char *help_text, void *userdata) xchat_hook_command;
+	xchat_hook *function (xchat_plugin *ph, const char *name, int pri, xchat_cmd_cb callback, void *userdata) xchat_hook_server;
+	xchat_hook *function (xchat_plugin *ph, const char *name, int pri, xchat_print_cb callback, void *userdata) xchat_hook_print;
+	xchat_hook *function (xchat_plugin *ph, int timeout, xchat_timer_cb callback, void *userdata) xchat_hook_timer;
+	xchat_hook *function (xchat_plugin *ph, int fd, int flags, xchat_fd_cb callback, void *userdata) xchat_hook_fd;
 	void *function (xchat_plugin *ph, xchat_hook *hook) xchat_unhook;
 	void function (xchat_plugin *ph, const char *text) xchat_print;
 	void function (xchat_plugin *ph, const char *format, ...) xchat_printf;
@@ -138,7 +138,7 @@ else
 		xchat_hook_command (xchat_plugin *ph,
 							const char *name,
 							int pri,
-							CommandCallback callback,
+							xchat_cmd_cb callback,
 							const char *help_text,
 							void *userdata);
 
@@ -146,27 +146,27 @@ else
 		xchat_hook_server (xchat_plugin *ph,
 							const char *name,
 							int pri,
-							CommandCallback callback,
+							xchat_cmd_cb callback,
 							void *userdata);
 
 	xchat_hook *
 		xchat_hook_print (xchat_plugin *ph,
 							const char *name,
 							int pri,
-							PrintCallback callback,
+							xchat_print_cb callback,
 							void *userdata);
 
 	xchat_hook *
 		xchat_hook_timer (xchat_plugin *ph,
 							int timeout,
-							TimerCallback callback,
+							xchat_timer_cb callback,
 							void *userdata);
 
 	xchat_hook *
 		xchat_hook_fd (xchat_plugin *ph,
 						int fd,
 						int flags,
-						FileCallback callback,
+						xchat_fd_cb callback,
 						void *userdata);
 
 	void *
