@@ -141,15 +141,17 @@ enum CommandPriority
 private enum PDIWORDS = 32;
 
 // TODO: Really inefficent for words_eol
-private void getWords(const(char)** cwords, ref const(char)[][PDIWORDS] words)
+private const(char)[][] getWords(const(char)** cwords, ref const(char)[][PDIWORDS] words)
 {
 	foreach(i; 1 .. PDIWORDS)
 	{
-		if(auto cword = cwords[i])
+		auto cword = cwords[i];
+		if(cword[0])
 			words[i - 1] = fromStringz(cword);
 		else
-			break;
+			return words[0 .. i - 1];
 	}
+	return words[];
 }
 
 void hookCommand(in char[] cmd,
@@ -159,9 +161,9 @@ void hookCommand(in char[] cmd,
 {
 	extern(C) static int xchat_cmd_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
 	{
-		const(char)[][PDIWORDS] words, words_eol;
-		getWords(cwords, words);
-		getWords(cwords_eol, words_eol);
+		const(char)[][PDIWORDS] words_buffer, words_eol_buffer;
+		auto words = getWords(cwords, words_buffer);
+		auto words_eol = getWords(cwords_eol, words_eol_buffer);
 
 		auto cb = cast(typeof(callback))ud;
 
@@ -184,9 +186,9 @@ void hookCommand(in char[] cmd,
 
 	extern(C) static int xchat_cmd_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
 	{
-		const(char)[][PDIWORDS] words, words_eol;
-		getWords(cwords, words);
-		getWords(cwords_eol, words_eol);
+		const(char)[][PDIWORDS] words_buffer, words_eol_buffer;
+		auto words = getWords(cwords, words_buffer);
+		auto words_eol = getWords(cwords_eol, words_eol_buffer);
 
 		auto data = cast(CallbackData*)ud;
 
@@ -205,8 +207,8 @@ void hookPrint(in char[] cmd,
 {
 	extern(C) static int xchat_print_cb(const(char)** cwords, void* ud)
 	{
-		const(char)[][PDIWORDS] words;
-		getWords(cwords, words);
+		const(char)[][PDIWORDS] words_buffer;
+		auto words = getWords(cwords, words_buffer);
 
 		auto cb = cast(typeof(callback))ud;
 
@@ -227,8 +229,8 @@ void hookPrint(in char[] cmd,
 
 	extern(C) static int xchat_print_cb(const(char)** cwords, void* ud)
 	{
-		const(char)[][PDIWORDS] words;
-		getWords(cwords, words);
+		const(char)[][PDIWORDS] words_buffer;
+		auto words = getWords(cwords, words_buffer);
 
 		auto data = cast(CallbackData*)ud;
 
