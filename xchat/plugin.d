@@ -2,6 +2,7 @@ module xchat.plugin;
 
 import xchat.capi;
 
+import std.conv;
 import std.string;
 import core.stdc.string : strlen;
 
@@ -28,6 +29,7 @@ int _xchatInitPlugin(void* plugin_handle,
 							 void function(ref PluginInfo) initFunc)
 {
 	ph = cast(xchat_plugin*)plugin_handle;
+	
 
 	PluginInfo info;
 
@@ -107,6 +109,16 @@ void commandf(FmtArgs...)(const(char)[] fmt, FmtArgs fmtArgs)
 	}
 
 	xchat_commandf(ph, "%.*s", fmt.length, fmt.ptr);
+}
+
+string getInfo(in char[] id)
+{
+	return to!string((xchat_get_info(ph, toStringz(id))));
+}
+
+void readInfo(in char[] id, void delegate(in char[] info) dg)
+{
+	dg(fromStringz(xchat_get_info(ph, toStringz(id))));
 }
 
 enum EatMode
