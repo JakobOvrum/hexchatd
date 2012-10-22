@@ -29,7 +29,6 @@ int _xchatInitPlugin(void* plugin_handle,
 							 void function(ref PluginInfo) initFunc)
 {
 	ph = cast(xchat_plugin*)plugin_handle;
-	
 
 	PluginInfo info;
 
@@ -61,8 +60,6 @@ int _xchatInitPlugin(void* plugin_handle,
 
 	if(info.version_)
 		*plugin_version = toStringz(info.version_);
-
-	debug xchat_printf(ph, "Debug: loaded plugin %s %s (%s)\n", *plugin_name, *plugin_version, *plugin_desc);
 
 	return 1; // Return 1 for success
 }
@@ -121,24 +118,39 @@ void readInfo(in char[] id, void delegate(in char[] info) dg)
 	dg(fromStringz(xchat_get_info(ph, toStringz(id))));
 }
 
-enum EatMode
+struct User
 {
-	none = XCHAT_EAT_NONE, // pass it on through!
-	xchat = XCHAT_EAT_XCHAT, // don't let xchat see this event
-	plugin = XCHAT_EAT_PLUGIN, // don't let other plugins see this event
-	all = XCHAT_EAT_XCHAT | XCHAT_EAT_PLUGIN // don't let anything see this event 
+	const(char)[] nick, userName, hostName;
 }
 
+User parseUser(const(char)[] user)
+{
+	auto nick = user.munch("^!");
+	auto userName = user.munch("^@");
+	return User(nick, userName, user);
+}
+
+/// Event consumption behavior.
+enum EatMode
+{
+	none = XCHAT_EAT_NONE, /// Pass it on through.
+	xchat = XCHAT_EAT_XCHAT, /// Don't let xchat see this event.
+	plugin = XCHAT_EAT_PLUGIN, /// Don't let other plugins see this event.
+	all = XCHAT_EAT_XCHAT | XCHAT_EAT_PLUGIN /// Don't let anything see this event.
+}
+
+///
 enum CommandPriority
 {
-	highest = XCHAT_PRI_HIGHEST,
-	high = XCHAT_PRI_HIGH,
-	normal = XCHAT_PRI_NORM,
-	low = XCHAT_PRI_LOW,
-	lowest = XCHAT_PRI_LOWEST
+	highest = XCHAT_PRI_HIGHEST, ///
+	high = XCHAT_PRI_HIGH, ///
+	normal = XCHAT_PRI_NORM, ///
+	low = XCHAT_PRI_LOW, ///
+	lowest = XCHAT_PRI_LOWEST ///
 }
 
 private enum PDIWORDS = 32;
+private alias const(char)[][PDIWORDS] WordBuffer;
 
 // TODO: Really inefficent for words_eol
 private const(char)[][] getWords(const(char)** cwords, ref const(char)[][PDIWORDS] words)
@@ -154,6 +166,81 @@ private const(char)[][] getWords(const(char)** cwords, ref const(char)[][PDIWORD
 	return words[];
 }
 
+private EatMode handleCallback(alias cb, string type, Args...)(Args args)
+{
+	try
+	{
+		return cb(args);
+	}
+	catch(Throwable e)
+	{
+		writefln("Error in " ~ type ~ " callback: %s", e.toString());
+	}
+	return EatMode.none;
+}
+
+/**
+* Hook a server message.
+*
+* Params:
+*   type = _type of message to hook
+*   callback = _callback function or delegate
+*   priority = priority of this hook. Should be CommandPriority.normal
+*/
+void hookServer(in char[] type,
+				 EatMode function(in char[][] words, in char[][] words_eol) callback,
+				 CommandPriority priority = CommandPriority.normal)
+{
+	extern(C) static int xchat_serv_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
+	{
+		WordBuffer words_buffer, words_eol_buffer;
+		auto words = getWords(cwords, words_buffer);
+		auto words_eol = getWords(cwords_eol, words_eol_buffer);
+
+		auto cb = cast(typeof(callback))ud;
+
+		return handleCallback!(cb, "server")(words, words_eol);
+	}
+
+	xchat_hook_server(ph, toStringz(type), priority, &xchat_serv_cb, callback);
+}
+
+/// Ditto
+void hookServer(in char[] type,
+				EatMode delegate(in char[][] words, in char[][] words_eol) callback,
+				CommandPriority priority = CommandPriority.normal)
+{
+	static struct CallbackData
+	{
+		typeof(callback) cb;
+	}
+
+	extern(C) static int xchat_serv_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
+	{
+		WordBuffer words_buffer, words_eol_buffer;
+		auto words = getWords(cwords, words_buffer);
+		auto words_eol = getWords(cwords_eol, words_eol_buffer);
+
+		auto cb = (cast(CallbackData*)ud).cb;
+
+		return handleCallback!(cb, "server")(words, words_eol);
+	}
+
+	auto data = new CallbackData;
+	data.cb = callback;
+
+	xchat_hook_server(ph, toStringz(type), priority, &xchat_serv_cb, data);
+}
+
+/**
+ * Hook a chat command.
+ *
+ * Params:
+ *   cmd = name of command
+ *   callback = _callback function or delegate
+ *   helpText = instructions for this command, displayed when the $(D /help <cmd>) command is invoked
+ *   priority = priority of this hook. Should be CommandPriority.normal
+ */
 void hookCommand(in char[] cmd,
 				 EatMode function(in char[][] words, in char[][] words_eol) callback,
 				 in char[] helpText = null,
@@ -161,19 +248,19 @@ void hookCommand(in char[] cmd,
 {
 	extern(C) static int xchat_cmd_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
 	{
-		const(char)[][PDIWORDS] words_buffer, words_eol_buffer;
+		WordBuffer words_buffer, words_eol_buffer;
 		auto words = getWords(cwords, words_buffer);
 		auto words_eol = getWords(cwords_eol, words_eol_buffer);
 
 		auto cb = cast(typeof(callback))ud;
 
-		return cb(words, words_eol);
+		return handleCallback!(cb, "command")(words, words_eol);
 	}
 
 	xchat_hook_command(ph, toStringz(cmd), priority, &xchat_cmd_cb, helpText? toStringz(helpText) : null, callback);
 }
 
-
+/// Ditto
 void hookCommand(in char[] cmd,
 				 EatMode delegate(in char[][] words, in char[][] words_eol) callback,
 				 in char[] helpText = null,
@@ -186,13 +273,13 @@ void hookCommand(in char[] cmd,
 
 	extern(C) static int xchat_cmd_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
 	{
-		const(char)[][PDIWORDS] words_buffer, words_eol_buffer;
+		WordBuffer words_buffer, words_eol_buffer;
 		auto words = getWords(cwords, words_buffer);
 		auto words_eol = getWords(cwords_eol, words_eol_buffer);
 
-		auto data = cast(CallbackData*)ud;
+		auto cb = (cast(CallbackData*)ud).cb;
 
-		return data.cb(words, words_eol);
+		return handleCallback!(cb, "command")(words, words_eol);
 	}
 
 	auto data = new CallbackData;
@@ -201,24 +288,36 @@ void hookCommand(in char[] cmd,
 	xchat_hook_command(ph, toStringz(cmd), priority, &xchat_cmd_cb, helpText? toStringz(helpText) : null, data);
 }
 
-void hookPrint(in char[] cmd,
+/**
+ * Hook a print event.
+ *
+ * The list of text events can be found in $(D Settings -> Advanced -> Text Events...);
+ * the list at the bottom of the window describes the contents of the $(D words) callback
+ * parameter for a particular event.
+ * Params:
+ *   name = _name of event
+ *   callback = _callback function or delegate
+ *   priority = priority of this hook. Should be CommandPriority.normal
+ */
+void hookPrint(in char[] name,
 			   EatMode function(in char[][] words) callback,
 			   CommandPriority priority = CommandPriority.normal)
 {
 	extern(C) static int xchat_print_cb(const(char)** cwords, void* ud)
 	{
-		const(char)[][PDIWORDS] words_buffer;
+		WordBuffer words_buffer;
 		auto words = getWords(cwords, words_buffer);
 
 		auto cb = cast(typeof(callback))ud;
 
-		return cb(words);
+		return handleCallback!(cb, "print")(words);
 	}
 
-	xchat_hook_print(ph, toStringz(cmd), priority, &xchat_print_cb, callback);
+	xchat_hook_print(ph, toStringz(name), priority, &xchat_print_cb, callback);
 }
 
-void hookPrint(in char[] cmd,
+/// Ditto
+void hookPrint(in char[] name,
 			   EatMode delegate(in char[][] words) callback,
 			   CommandPriority priority = CommandPriority.normal)
 {
@@ -229,16 +328,16 @@ void hookPrint(in char[] cmd,
 
 	extern(C) static int xchat_print_cb(const(char)** cwords, void* ud)
 	{
-		const(char)[][PDIWORDS] words_buffer;
+		WordBuffer words_buffer;
 		auto words = getWords(cwords, words_buffer);
 
-		auto data = cast(CallbackData*)ud;
+		auto cb = (cast(CallbackData*)ud).cb;
 
-		return data.cb(words);
+		return handleCallback!(cb, "print")(words);
 	}
 
 	auto data = new CallbackData;
 	data.cb = callback;
 
-	xchat_hook_print(ph, toStringz(cmd), priority, &xchat_print_cb, data);
+	xchat_hook_print(ph, toStringz(name), priority, &xchat_print_cb, data);
 }
