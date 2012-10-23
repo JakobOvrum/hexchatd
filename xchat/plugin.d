@@ -5,6 +5,7 @@ import xchat.capi;
 import std.conv;
 import std.string;
 import core.stdc.string : strlen;
+import core.stdc.stdio;
 
 // Note: to!string will currently make a copy unconditionally, hence this.
 private inout(char)[] fromStringz(inout(char)* cstr)
@@ -12,7 +13,7 @@ private inout(char)[] fromStringz(inout(char)* cstr)
 	return cstr[0 .. strlen(cstr)];
 }
 
-__gshared xchat_plugin *ph; // Plugin handle
+private __gshared xchat_plugin *ph; // Plugin handle
 
 struct PluginInfo
 {
@@ -20,6 +21,8 @@ struct PluginInfo
 	string description;
 	string version_;
 }
+
+private __gshared PluginInfo pluginInfo;
 
 // Internal, has to be public because of the below mixin strings.
 int _xchatInitPlugin(void* plugin_handle,
@@ -30,37 +33,51 @@ int _xchatInitPlugin(void* plugin_handle,
 {
 	ph = cast(xchat_plugin*)plugin_handle;
 
-	PluginInfo info;
-
 	if(plugin_name && *plugin_name)
-		info.name = fromStringz(*plugin_name);
+		pluginInfo.name = fromStringz(*plugin_name);
 
 	if(plugin_desc && *plugin_desc)
-		info.description = fromStringz(*plugin_desc);
+		pluginInfo.description = fromStringz(*plugin_desc);
 
 	if(plugin_version && *plugin_version)
-		info.version_ = fromStringz(*plugin_version);
+		pluginInfo.version_ = fromStringz(*plugin_version);
 
 	try
 	{
-		initFunc(info);
+		initFunc(pluginInfo);
 	}
 	catch(Throwable e)
 	{
 		auto message = e.toString();
-		xchat_printf(ph, `Error initializing plugin "%.*s": %.*s`, info.name.length, info.name.ptr, message.length, message.ptr);
+		xchat_printf(ph, `Error initializing plugin "%.*s": %.*s`, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
 		return 0;
 	}
 
-	if(info.name)
-		*plugin_name = toStringz(info.name);
+	if(pluginInfo.name)
+		*plugin_name = toStringz(pluginInfo.name);
 
-	if(info.description)
-		*plugin_desc = toStringz(info.description);
+	if(pluginInfo.description)
+		*plugin_desc = toStringz(pluginInfo.description);
 
-	if(info.version_)
-		*plugin_version = toStringz(info.version_);
+	if(pluginInfo.version_)
+		*plugin_version = toStringz(pluginInfo.version_);
 
+	return 1; // Return 1 for success
+}
+
+// Internal, has to be public because of the below mixin strings.
+int _xchatShutdownPlugin(void function() shutdownFunc)
+{
+	try
+	{
+		shutdownFunc();
+	}
+	catch(Throwable e)
+	{
+		auto message = e.toString();
+		fprintf(stderr,`Error initializing plugin "%.*s": %.*s`, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
+		return 0;
+	}
 	return 1; // Return 1 for success
 }
 
@@ -84,7 +101,7 @@ template XchatPlugin(alias initFunc, alias deinitFunc)
 {
 	enum XchatPlugin = XchatPlugin!initFunc ~
 		"export extern(C) int xchat_plugin_deinit(void* ph) {" ~
-		"	return " ~ __traits(identifier, deinitFunc) ~ "();" ~
+		"	return _xchatShutdownPlugin(&" ~ __traits(identifier, deinitFunc) ~ ");" ~
 		"}";
 }
 
