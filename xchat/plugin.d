@@ -49,7 +49,7 @@ int _xchatInitPlugin(void* plugin_handle,
 	catch(Throwable e)
 	{
 		auto message = e.toString();
-		xchat_printf(ph, `Error initializing plugin "%.*s": %.*s`, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
+		xchat_printf(ph, `Error initializing plugin "%.*s": %.*s`.ptr, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
 		return 0;
 	}
 
@@ -109,10 +109,10 @@ void writefln(FmtArgs...)(const(char)[] fmt, FmtArgs fmtArgs)
 {
 	static if(fmtArgs.length != 0)
 	{
-		fmt = xformat(fmt, fmtArgs);
+		fmt = format(fmt, fmtArgs);
 	}
 
-	xchat_printf(ph, "%.*s", fmt.length, fmt.ptr);
+	xchat_printf(ph, "%.*s".ptr, fmt.length, fmt.ptr);
 }
 
 void commandf(FmtArgs...)(const(char)[] fmt, FmtArgs fmtArgs)
@@ -208,13 +208,15 @@ void hookServer(in char[] type,
 				 EatMode function(in char[][] words, in char[][] words_eol) callback,
 				 CommandPriority priority = CommandPriority.normal)
 {
+	alias typeof(callback) Callback; // Workaround for older compiler versions
+	
 	extern(C) static int xchat_serv_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
 	{
 		WordBuffer words_buffer, words_eol_buffer;
 		auto words = getWords(cwords, words_buffer);
 		auto words_eol = getWords(cwords_eol, words_eol_buffer);
 
-		auto cb = cast(typeof(callback))ud;
+		auto cb = cast(Callback)ud;
 
 		return handleCallback!(cb, "server")(words, words_eol);
 	}
@@ -263,13 +265,16 @@ void hookCommand(in char[] cmd,
 				 in char[] helpText = null,
 				 CommandPriority priority = CommandPriority.normal)
 {
+
+	alias typeof(callback) Callback; // Workaround for older compiler versions
+	
 	extern(C) static int xchat_cmd_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
 	{
 		WordBuffer words_buffer, words_eol_buffer;
 		auto words = getWords(cwords, words_buffer);
 		auto words_eol = getWords(cwords_eol, words_eol_buffer);
 
-		auto cb = cast(typeof(callback))ud;
+		auto cb = cast(Callback)ud;
 
 		return handleCallback!(cb, "command")(words, words_eol);
 	}
@@ -320,12 +325,14 @@ void hookPrint(in char[] name,
 			   EatMode function(in char[][] words) callback,
 			   CommandPriority priority = CommandPriority.normal)
 {
+	alias typeof(callback) Callback; // Workaround for older compiler versions
+	
 	extern(C) static int xchat_print_cb(const(char)** cwords, void* ud)
 	{
 		WordBuffer words_buffer;
 		auto words = getWords(cwords, words_buffer);
 
-		auto cb = cast(typeof(callback))ud;
+		auto cb = cast(Callback)ud;
 
 		return handleCallback!(cb, "print")(words);
 	}
