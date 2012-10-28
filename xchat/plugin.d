@@ -2,6 +2,7 @@ module xchat.plugin;
 
 import xchat.capi;
 
+import std.array;
 import std.conv;
 import std.string;
 import core.stdc.string : strlen;
@@ -144,6 +145,10 @@ User parseUser(const(char)[] user)
 {
 	auto nick = user.munch("^!");
 	auto userName = user.munch("^@");
+	
+	userName.popFront(); // Skip exclamation mark
+	user.popFront(); // Skip at-mark
+	
 	return User(nick, userName, user);
 }
 
