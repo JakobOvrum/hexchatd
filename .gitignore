@@ -10,3 +10,6 @@
 
 # Development Environment (XChat Client)
 /devenv
+
+# Dub
+/.dub

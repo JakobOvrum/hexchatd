@@ -1,0 +1,13 @@
+{
+	"name": "xchatd",
+	"description": "XChat plugin interface for the D programming language",
+	"authors": ["Jakob Ovrum"],
+	"copyright": "Copyright© Jakob Ovrum 2012-2014",
+	"homepage": "https://github.com/JakobOvrum/xchatd",
+	"license": "MIT",
+
+	"targetType": "library",
+	"targetPath": "lib",
+
+	"sourcePaths": ["xchat"]
+}
