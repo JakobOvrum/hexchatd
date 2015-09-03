@@ -1,5 +1,5 @@
-xchatd
-http://github.com/JakobOvrum/xchatd
+hexchatd
+http://github.com/JakobOvrum/hexchatd
 =================================================================
  Copyright (c) 2012 Jakob Ovrum
 

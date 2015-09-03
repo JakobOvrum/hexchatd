@@ -1,15 +1,15 @@
-# xchatd
-*xchatd* is a plugin interface for XChat built on the C interface,
+# hexchatd
+*hexchatd* is a plugin interface for HexChat and XChat built on the C interface,
 allowing for plugins written in the D programming language.
 
 Bindings for the original C interface are also included.
 
 ## Directory Structure
 
- * `xchat` - source package containing both the high and low level interfaces.
- * `visuald` - [VisualD](http://www.dsource.org/projects/visuald) project files.
+ * `hexchat` - source package containing both the high and low level interfaces.
+ * `visuald` - [VisualD](http://www.dsource.org/projects/visuald) project files. (Unmaintained)
  * `lib` - library files for the high level interface (when built).
- * `example` - *xchatd* examples.
+ * `example` - *hexchatd* examples.
 
 ## Documentation
 Documentation coming soon.
@@ -25,4 +25,4 @@ project files for the examples. The plugin DLLs are output to the `example/bin` 
 Move a plugin DLL to the `addons` directory of your XChat configuration directory to test it.
 
 ## License
-*xchatd* is licensed under the terms of the MIT license (see the [LICENSE.txt](https://github.com/JakobOvrum/xchatd/blob/master/LICENSE.txt) file for details).
+*hexchatd* is licensed under the terms of the MIT license (see the [LICENSE.txt](https://github.com/JakobOvrum/xchatd/blob/master/LICENSE.txt) file for details).

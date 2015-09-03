@@ -1,6 +1,6 @@
 module example.autoop;
 
-import xchat.plugin;
+import hexchat.plugin;
 
 bool enabled = true;
 
@@ -40,4 +40,5 @@ void initPlugin(ref PluginInfo info)
 	writefln("AutoOpPlugin loaded successfully!");
 }
 
-mixin(XchatPlugin!initPlugin);
+mixin Plugin!initPlugin;
+
