@@ -9,5 +9,10 @@
 	"targetType": "library",
 	"targetPath": "lib",
 
-	"sourcePaths": ["xchat"]
+	"libs-linux": ["phobos2"],
+	"dflags-linux": ["-fPIC"],
+
+	"sourcePaths": ["source"],
+	"importPaths": ["source"]
 }
+

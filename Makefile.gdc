@@ -29,7 +29,7 @@ else
 	OUTDIR = lib
 endif
 
-XCHATD_SOURCES = xchat/plugin.d xchat/capi.d
+XCHATD_SOURCES = source/xchat/plugin.d source/xchat/capi.d
 
 all: $(OUTDIR)/lib$(LIBNAME).a
 
