@@ -8,102 +8,124 @@ import std.string;
 import core.stdc.string : strlen;
 import core.stdc.stdio;
 
-// Note: to!string will currently make a copy unconditionally, hence this.
-private inout(char)[] fromStringz(inout(char)* cstr)
-{
-	return cstr[0 .. strlen(cstr)];
-}
+private __gshared hexchat_plugin* ph; // Plugin handle
 
-private __gshared hexchat_plugin *ph; // Plugin handle
-
+///
 struct PluginInfo
 {
-	string name;
-	string description;
-	string version_;
+	string name; ///
+	string description; ///
+	string version_; ///
 }
 
-private __gshared PluginInfo pluginInfo;
+__gshared PluginInfo pluginInfo;
 
-// Internal, has to be public because of the below mixin strings.
-int _hexchatInitPlugin(void* plugin_handle,
-							 immutable(char)** plugin_name,
-							 immutable(char)** plugin_desc,
-							 immutable(char)** plugin_version,
-							 void function(ref PluginInfo) initFunc)
+/**
+ * Type of client this plugin should be compatible with.
+ */
+enum PluginStyle
 {
-	ph = cast(hexchat_plugin*)plugin_handle;
-
-	if(plugin_name && *plugin_name)
-		pluginInfo.name = fromStringz(*plugin_name);
-
-	if(plugin_desc && *plugin_desc)
-		pluginInfo.description = fromStringz(*plugin_desc);
-
-	if(plugin_version && *plugin_version)
-		pluginInfo.version_ = fromStringz(*plugin_version);
-
-	try
-	{
-		initFunc(pluginInfo);
-	}
-	catch(Throwable e)
-	{
-		auto message = e.toString();
-		hexchat_printf(ph, `Error initializing plugin "%.*s": %.*s`.ptr, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
-		return 0;
-	}
-
-	if(pluginInfo.name)
-		*plugin_name = toStringz(pluginInfo.name);
-
-	if(pluginInfo.description)
-		*plugin_desc = toStringz(pluginInfo.description);
-
-	if(pluginInfo.version_)
-		*plugin_version = toStringz(pluginInfo.version_);
-
-	return 1; // Return 1 for success
+	hexchat, /// HexChat plugin.
+	xchat /// XChat plugin.
 }
 
-// Internal, has to be public because of the below mixin strings.
-int _hexchatShutdownPlugin(void function() shutdownFunc)
-{
-	try
-	{
-		shutdownFunc();
-	}
-	catch(Throwable e)
-	{
-		auto message = e.toString();
-		fprintf(stderr,`Error initializing plugin "%.*s": %.*s`, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
-		return 0;
-	}
-	return 1; // Return 1 for success
-}
+enum initFuncName(PluginStyle style : PluginStyle.hexchat) = "hexchat_plugin_init";
+enum deinitFuncName(PluginStyle style : PluginStyle.hexchat) = "hexchat_plugin_deinit";
+enum initFuncName(PluginStyle style : PluginStyle.xchat) = "xchat_plugin_init";
+enum deinitFuncName(PluginStyle style : PluginStyle.xchat) = "xchat_plugin_deinit";
+template initFuncName(PluginStyle) { static assert(false); }
+template deinitFuncName(PluginStyle) { static assert(false); }
 
 //TODO: verify initFunc signature
-template Plugin(alias initFunc)
+///
+mixin template Plugin(alias initFunc, PluginStyle style = PluginStyle.hexchat)
 {
-	enum Plugin =
-		// The first exported C symbol always gets a preceeding
-		// underscore on Windows with DMD/OPTLINK, but hexchat
-		// expects "hexchat_plugin_init" exactly.
-		"version(Windows) export extern(C) void _systemconvdummy() {}\n" ~
-		"export extern(C) int hexchat_plugin_init(void* ph," ~
-		"	immutable(char)** name, immutable(char)** desc, immutable(char)** version_, char* arg)" ~
-		"{" ~
-		"	return _hexchatInitPlugin(ph, name, desc, version_, &" ~ __traits(identifier, initFunc) ~ ");" ~
-		"}";
+	pragma(mangle, initFuncName!style)
+	export extern(C) int __initDPlugin(void* plugin_handle,
+			immutable(char)** plugin_name,
+			immutable(char)** plugin_desc,
+			immutable(char)** plugin_version,
+			char* arg)
+	{
+		import std.string : fromStringz, toStringz;
+		import hexchat.capi;
+
+		version(Windows) {}
+		else
+		{
+			import core.runtime : Runtime;
+
+			if(!Runtime.initialize())
+				return 0;
+		}
+
+		auto ph = cast(hexchat_plugin*)plugin_handle;
+
+		if(plugin_name && *plugin_name)
+			pluginInfo.name = fromStringz(*plugin_name);
+
+		if(plugin_desc && *plugin_desc)
+			pluginInfo.description = fromStringz(*plugin_desc);
+
+		if(plugin_version && *plugin_version)
+			pluginInfo.version_ = fromStringz(*plugin_version);
+
+		try
+		{
+			initFunc(pluginInfo);
+		}
+		catch(Throwable e)
+		{
+			auto message = e.toString();
+			hexchat_printf(ph, `Error initializing plugin "%.*s": %.*s`.ptr, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
+			return 0;
+		}
+
+		if(pluginInfo.name)
+			*plugin_name = toStringz(pluginInfo.name);
+
+		if(pluginInfo.description)
+			*plugin_desc = toStringz(pluginInfo.description);
+
+		if(pluginInfo.version_)
+			*plugin_version = toStringz(pluginInfo.version_);
+
+		return 1; // Return 1 for success
+	}
 }
 
 //TODO: verify deinitFunc signature
-template Plugin(alias initFunc, alias deinitFunc)
+///
+mixin template Plugin(alias initFunc, alias deinitFunc, PluginStyle style = PluginStyle.hexchat)
 {
-	enum Plugin = Plugin!initFunc ~
-		"export extern(C) int hexchat_plugin_deinit(void* ph) {" ~
-		"	return _hexchatShutdownPlugin(&" ~ __traits(identifier, deinitFunc) ~ ");" ~
-		"}";
+	mixin Plugin!(initFunc, style);
+
+	pragma(mangle, deinitFuncName!style)
+	export extern(C) int __deinitDPlugin(void* ph)
+	{
+		import hexchat.capi;
+
+		version(Windows) {} else
+			import core.runtime : Runtime;
+
+		bool deinitSucceeded = true;
+		try
+		{
+			deinitFunc();
+		}
+		catch(Throwable e)
+		{
+			auto message = e.toString();
+			fprintf(stderr,`Error initializing plugin "%.*s": %.*s`, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
+			deinitSucceeded = false;
+		}
+
+		// Return 1 for success
+		version(Windows)
+			return deinitSucceeded;
+		else
+			return Runtime.terminate() && deinitSucceeded;
+	}
 }
 
 void writefln(FmtArgs...)(const(char)[] fmt, FmtArgs fmtArgs)
