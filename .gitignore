@@ -13,3 +13,7 @@
 
 # Dub
 /.dub
+
+# Temporary files
+*.swp
+

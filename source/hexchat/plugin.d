@@ -1,6 +1,6 @@
-module xchat.plugin;
+module hexchat.plugin;
 
-import xchat.capi;
+import hexchat.capi;
 
 import std.array;
 import std.conv;
@@ -14,7 +14,7 @@ private inout(char)[] fromStringz(inout(char)* cstr)
 	return cstr[0 .. strlen(cstr)];
 }
 
-private __gshared xchat_plugin *ph; // Plugin handle
+private __gshared hexchat_plugin *ph; // Plugin handle
 
 struct PluginInfo
 {
@@ -26,13 +26,13 @@ struct PluginInfo
 private __gshared PluginInfo pluginInfo;
 
 // Internal, has to be public because of the below mixin strings.
-int _xchatInitPlugin(void* plugin_handle,
+int _hexchatInitPlugin(void* plugin_handle,
 							 immutable(char)** plugin_name,
 							 immutable(char)** plugin_desc,
 							 immutable(char)** plugin_version,
 							 void function(ref PluginInfo) initFunc)
 {
-	ph = cast(xchat_plugin*)plugin_handle;
+	ph = cast(hexchat_plugin*)plugin_handle;
 
 	if(plugin_name && *plugin_name)
 		pluginInfo.name = fromStringz(*plugin_name);
@@ -50,7 +50,7 @@ int _xchatInitPlugin(void* plugin_handle,
 	catch(Throwable e)
 	{
 		auto message = e.toString();
-		xchat_printf(ph, `Error initializing plugin "%.*s": %.*s`.ptr, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
+		hexchat_printf(ph, `Error initializing plugin "%.*s": %.*s`.ptr, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
 		return 0;
 	}
 
@@ -67,7 +67,7 @@ int _xchatInitPlugin(void* plugin_handle,
 }
 
 // Internal, has to be public because of the below mixin strings.
-int _xchatShutdownPlugin(void function() shutdownFunc)
+int _hexchatShutdownPlugin(void function() shutdownFunc)
 {
 	try
 	{
@@ -83,26 +83,26 @@ int _xchatShutdownPlugin(void function() shutdownFunc)
 }
 
 //TODO: verify initFunc signature
-template XchatPlugin(alias initFunc)
+template Plugin(alias initFunc)
 {
-	enum XchatPlugin = 
+	enum Plugin =
 		// The first exported C symbol always gets a preceeding
-		// underscore on Windows with DMD/OPTLINK, but xchat
-		// expects "xchat_plugin_init" exactly.
+		// underscore on Windows with DMD/OPTLINK, but hexchat
+		// expects "hexchat_plugin_init" exactly.
 		"version(Windows) export extern(C) void _systemconvdummy() {}\n" ~
-		"export extern(C) int xchat_plugin_init(void* ph," ~
+		"export extern(C) int hexchat_plugin_init(void* ph," ~
 		"	immutable(char)** name, immutable(char)** desc, immutable(char)** version_, char* arg)" ~
 		"{" ~
-		"	return _xchatInitPlugin(ph, name, desc, version_, &" ~ __traits(identifier, initFunc) ~ ");" ~
+		"	return _hexchatInitPlugin(ph, name, desc, version_, &" ~ __traits(identifier, initFunc) ~ ");" ~
 		"}";
 }
 
 //TODO: verify deinitFunc signature
-template XchatPlugin(alias initFunc, alias deinitFunc)
+template Plugin(alias initFunc, alias deinitFunc)
 {
-	enum XchatPlugin = XchatPlugin!initFunc ~
-		"export extern(C) int xchat_plugin_deinit(void* ph) {" ~
-		"	return _xchatShutdownPlugin(&" ~ __traits(identifier, deinitFunc) ~ ");" ~
+	enum Plugin = Plugin!initFunc ~
+		"export extern(C) int hexchat_plugin_deinit(void* ph) {" ~
+		"	return _hexchatShutdownPlugin(&" ~ __traits(identifier, deinitFunc) ~ ");" ~
 		"}";
 }
 
@@ -113,27 +113,27 @@ void writefln(FmtArgs...)(const(char)[] fmt, FmtArgs fmtArgs)
 		fmt = format(fmt, fmtArgs);
 	}
 
-	xchat_printf(ph, "%.*s".ptr, fmt.length, fmt.ptr);
+	hexchat_printf(ph, "%.*s".ptr, fmt.length, fmt.ptr);
 }
 
 void commandf(FmtArgs...)(const(char)[] fmt, FmtArgs fmtArgs)
 {
 	static if(fmtArgs.length != 0)
 	{
-		fmt = xformat(fmt, fmtArgs);
+		fmt = format(fmt, fmtArgs);
 	}
 
-	xchat_commandf(ph, "%.*s", fmt.length, fmt.ptr);
+	hexchat_commandf(ph, "%.*s", fmt.length, fmt.ptr);
 }
 
 string getInfo(in char[] id)
 {
-	return to!string((xchat_get_info(ph, toStringz(id))));
+	return to!string((hexchat_get_info(ph, toStringz(id))));
 }
 
 void readInfo(in char[] id, void delegate(in char[] info) dg)
 {
-	dg(fromStringz(xchat_get_info(ph, toStringz(id))));
+	dg(fromStringz(hexchat_get_info(ph, toStringz(id))));
 }
 
 struct User
@@ -145,30 +145,30 @@ User parseUser(const(char)[] user)
 {
 	auto nick = user.munch("^!");
 	auto userName = user.munch("^@");
-	
+
 	userName.popFront(); // Skip exclamation mark
 	user.popFront(); // Skip at-mark
-	
+
 	return User(nick, userName, user);
 }
 
 /// Event consumption behavior.
 enum EatMode
 {
-	none = XCHAT_EAT_NONE, /// Pass it on through.
-	xchat = XCHAT_EAT_XCHAT, /// Don't let xchat see this event.
-	plugin = XCHAT_EAT_PLUGIN, /// Don't let other plugins see this event.
-	all = XCHAT_EAT_XCHAT | XCHAT_EAT_PLUGIN /// Don't let anything see this event.
+	none = HEXCHAT_EAT_NONE, /// Pass it on through.
+	hexchat = HEXCHAT_EAT_HEXCHAT, /// Don't let xchat see this event.
+	plugin = HEXCHAT_EAT_PLUGIN, /// Don't let other plugins see this event.
+	all = HEXCHAT_EAT_HEXCHAT | HEXCHAT_EAT_PLUGIN /// Don't let anything see this event.
 }
 
 ///
 enum CommandPriority
 {
-	highest = XCHAT_PRI_HIGHEST, ///
-	high = XCHAT_PRI_HIGH, ///
-	normal = XCHAT_PRI_NORM, ///
-	low = XCHAT_PRI_LOW, ///
-	lowest = XCHAT_PRI_LOWEST ///
+	highest = HEXCHAT_PRI_HIGHEST, ///
+	high = HEXCHAT_PRI_HIGH, ///
+	normal = HEXCHAT_PRI_NORM, ///
+	low = HEXCHAT_PRI_LOW, ///
+	lowest = HEXCHAT_PRI_LOWEST ///
 }
 
 private enum PDIWORDS = 32;
@@ -214,8 +214,8 @@ void hookServer(in char[] type,
 				 CommandPriority priority = CommandPriority.normal)
 {
 	alias typeof(callback) Callback; // Workaround for older compiler versions
-	
-	extern(C) static int xchat_serv_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
+
+	extern(C) static int hexchat_serv_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
 	{
 		WordBuffer words_buffer, words_eol_buffer;
 		auto words = getWords(cwords, words_buffer);
@@ -226,7 +226,7 @@ void hookServer(in char[] type,
 		return handleCallback!(cb, "server")(words, words_eol);
 	}
 
-	xchat_hook_server(ph, toStringz(type), priority, &xchat_serv_cb, callback);
+	hexchat_hook_server(ph, toStringz(type), priority, &hexchat_serv_cb, callback);
 }
 
 /// Ditto
@@ -239,7 +239,7 @@ void hookServer(in char[] type,
 		typeof(callback) cb;
 	}
 
-	extern(C) static int xchat_serv_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
+	extern(C) static int hexchat_serv_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
 	{
 		WordBuffer words_buffer, words_eol_buffer;
 		auto words = getWords(cwords, words_buffer);
@@ -253,7 +253,7 @@ void hookServer(in char[] type,
 	auto data = new CallbackData;
 	data.cb = callback;
 
-	xchat_hook_server(ph, toStringz(type), priority, &xchat_serv_cb, data);
+	hexchat_hook_server(ph, toStringz(type), priority, &hexchat_serv_cb, data);
 }
 
 /**
@@ -272,8 +272,8 @@ void hookCommand(in char[] cmd,
 {
 
 	alias typeof(callback) Callback; // Workaround for older compiler versions
-	
-	extern(C) static int xchat_cmd_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
+
+	extern(C) static int hexchat_cmd_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
 	{
 		WordBuffer words_buffer, words_eol_buffer;
 		auto words = getWords(cwords, words_buffer);
@@ -284,7 +284,7 @@ void hookCommand(in char[] cmd,
 		return handleCallback!(cb, "command")(words, words_eol);
 	}
 
-	xchat_hook_command(ph, toStringz(cmd), priority, &xchat_cmd_cb, helpText? toStringz(helpText) : null, callback);
+	hexchat_hook_command(ph, toStringz(cmd), priority, &hexchat_cmd_cb, helpText? toStringz(helpText) : null, callback);
 }
 
 /// Ditto
@@ -298,7 +298,7 @@ void hookCommand(in char[] cmd,
 		typeof(callback) cb;
 	}
 
-	extern(C) static int xchat_cmd_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
+	extern(C) static int hexchat_cmd_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
 	{
 		WordBuffer words_buffer, words_eol_buffer;
 		auto words = getWords(cwords, words_buffer);
@@ -312,7 +312,7 @@ void hookCommand(in char[] cmd,
 	auto data = new CallbackData;
 	data.cb = callback;
 
-	xchat_hook_command(ph, toStringz(cmd), priority, &xchat_cmd_cb, helpText? toStringz(helpText) : null, data);
+	hexchat_hook_command(ph, toStringz(cmd), priority, &hexchat_cmd_cb, helpText? toStringz(helpText) : null, data);
 }
 
 /**
@@ -331,8 +331,8 @@ void hookPrint(in char[] name,
 			   CommandPriority priority = CommandPriority.normal)
 {
 	alias typeof(callback) Callback; // Workaround for older compiler versions
-	
-	extern(C) static int xchat_print_cb(const(char)** cwords, void* ud)
+
+	extern(C) static int hexchat_print_cb(const(char)** cwords, void* ud)
 	{
 		WordBuffer words_buffer;
 		auto words = getWords(cwords, words_buffer);
@@ -342,7 +342,7 @@ void hookPrint(in char[] name,
 		return handleCallback!(cb, "print")(words);
 	}
 
-	xchat_hook_print(ph, toStringz(name), priority, &xchat_print_cb, callback);
+	hexchat_hook_print(ph, toStringz(name), priority, &hexchat_print_cb, callback);
 }
 
 /// Ditto
@@ -355,7 +355,7 @@ void hookPrint(in char[] name,
 		typeof(callback) cb;
 	}
 
-	extern(C) static int xchat_print_cb(const(char)** cwords, void* ud)
+	extern(C) static int hexchat_print_cb(const(char)** cwords, void* ud)
 	{
 		WordBuffer words_buffer;
 		auto words = getWords(cwords, words_buffer);
@@ -368,5 +368,6 @@ void hookPrint(in char[] name,
 	auto data = new CallbackData;
 	data.cb = callback;
 
-	xchat_hook_print(ph, toStringz(name), priority, &xchat_print_cb, data);
+	hexchat_hook_print(ph, toStringz(name), priority, &hexchat_print_cb, data);
 }
+
