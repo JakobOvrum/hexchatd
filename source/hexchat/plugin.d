@@ -1,12 +1,7 @@
 module hexchat.plugin;
 
 import hexchat.capi;
-
-import std.array;
-import std.conv;
-import std.string;
-import core.stdc.string : strlen;
-import core.stdc.stdio;
+import std.traits : lvalueOf;
 
 private __gshared hexchat_plugin* ph; // Plugin handle
 
@@ -18,7 +13,7 @@ struct PluginInfo
 	string version_; ///
 }
 
-__gshared PluginInfo pluginInfo;
+private __gshared PluginInfo pluginInfo;
 
 /**
  * Type of client this plugin should be compatible with.
@@ -36,95 +31,115 @@ enum deinitFuncName(PluginStyle style : PluginStyle.xchat) = "xchat_plugin_deini
 template initFuncName(PluginStyle) { static assert(false); }
 template deinitFuncName(PluginStyle) { static assert(false); }
 
-//TODO: verify initFunc signature
+// Public undocumented
+int __initDPlugin(InitFunc)(
+		InitFunc initFunc,
+		void* plugin_handle,
+		immutable(char)** plugin_name,
+		immutable(char)** plugin_desc,
+		immutable(char)** plugin_version)
+	if(is(typeof(initFunc(lvalueOf!PluginInfo))))
+{
+	import std.string : fromStringz, toStringz;
+	import hexchat.capi;
+
+	version(Windows) {}
+	else
+	{
+		import core.runtime : Runtime;
+
+		if(!Runtime.initialize())
+			return 0;
+	}
+
+	.ph = cast(hexchat_plugin*)plugin_handle;
+
+	if(plugin_name && *plugin_name)
+		.pluginInfo.name = fromStringz(*plugin_name);
+
+	if(plugin_desc && *plugin_desc)
+		.pluginInfo.description = fromStringz(*plugin_desc);
+
+	if(plugin_version && *plugin_version)
+		.pluginInfo.version_ = fromStringz(*plugin_version);
+
+	try
+	{
+		initFunc(pluginInfo);
+	}
+	catch(Throwable e)
+	{
+		auto message = e.toString();
+		hexchat_printf(ph, `Error initializing plugin "%.*s": %.*s`.ptr, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
+		return 0;
+	}
+
+	if(pluginInfo.name)
+		*plugin_name = toStringz(pluginInfo.name);
+
+	if(pluginInfo.description)
+		*plugin_desc = toStringz(pluginInfo.description);
+
+	if(pluginInfo.version_)
+		*plugin_version = toStringz(pluginInfo.version_);
+
+	return 1; // Return 1 for success
+}
+
+// Public undocumented
+int __deinitDPlugin(DeinitFunc)(DeinitFunc deinitFunc, void* ph)
+	if(is(typeof(deinitFunc())))
+{
+	import core.stdc.stdio : fprintf, stderr;
+	import hexchat.capi;
+
+	version(Windows) {} else
+		import core.runtime : Runtime;
+
+	bool deinitSucceeded = true;
+	try
+	{
+		deinitFunc();
+	}
+	catch(Throwable e)
+	{
+		auto message = e.toString();
+		fprintf(stderr,`Error initializing plugin "%.*s": %.*s`, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
+		deinitSucceeded = false;
+	}
+
+	// Return 1 for success
+	version(Windows)
+		return deinitSucceeded;
+	else
+		return Runtime.terminate() && deinitSucceeded;
+}
+
+
 ///
 mixin template Plugin(alias initFunc, PluginStyle style = PluginStyle.hexchat)
+	if(is(typeof(initFunc(lvalueOf!PluginInfo))))
 {
 	pragma(mangle, initFuncName!style)
-	export extern(C) int __initDPlugin(void* plugin_handle,
-			immutable(char)** plugin_name,
-			immutable(char)** plugin_desc,
-			immutable(char)** plugin_version,
-			char* arg)
+	export extern(C) int __initCPlugin(void* plugin_handle,
+		immutable(char)** plugin_name,
+		immutable(char)** plugin_desc,
+		immutable(char)** plugin_version,
+		char* arg)
 	{
-		import std.string : fromStringz, toStringz;
-		import hexchat.capi;
-
-		version(Windows) {}
-		else
-		{
-			import core.runtime : Runtime;
-
-			if(!Runtime.initialize())
-				return 0;
-		}
-
-		auto ph = cast(hexchat_plugin*)plugin_handle;
-
-		if(plugin_name && *plugin_name)
-			pluginInfo.name = fromStringz(*plugin_name);
-
-		if(plugin_desc && *plugin_desc)
-			pluginInfo.description = fromStringz(*plugin_desc);
-
-		if(plugin_version && *plugin_version)
-			pluginInfo.version_ = fromStringz(*plugin_version);
-
-		try
-		{
-			initFunc(pluginInfo);
-		}
-		catch(Throwable e)
-		{
-			auto message = e.toString();
-			hexchat_printf(ph, `Error initializing plugin "%.*s": %.*s`.ptr, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
-			return 0;
-		}
-
-		if(pluginInfo.name)
-			*plugin_name = toStringz(pluginInfo.name);
-
-		if(pluginInfo.description)
-			*plugin_desc = toStringz(pluginInfo.description);
-
-		if(pluginInfo.version_)
-			*plugin_version = toStringz(pluginInfo.version_);
-
-		return 1; // Return 1 for success
+		return __initDPlugin(&initFunc, plugin_handle, plugin_name, plugin_desc, plugin_version);
 	}
 }
 
-//TODO: verify deinitFunc signature
 ///
 mixin template Plugin(alias initFunc, alias deinitFunc, PluginStyle style = PluginStyle.hexchat)
 {
 	mixin Plugin!(initFunc, style);
 
 	pragma(mangle, deinitFuncName!style)
-	export extern(C) int __deinitDPlugin(void* ph)
+	export extern(C) int __deinitCPlugin(void* plugin_handle)
 	{
-		import hexchat.capi;
-
-		version(Windows) {} else
-			import core.runtime : Runtime;
-
-		bool deinitSucceeded = true;
-		try
-		{
-			deinitFunc();
-		}
-		catch(Throwable e)
-		{
-			auto message = e.toString();
-			fprintf(stderr,`Error initializing plugin "%.*s": %.*s`, pluginInfo.name.length, pluginInfo.name.ptr, message.length, message.ptr);
-			deinitSucceeded = false;
-		}
-
-		// Return 1 for success
-		version(Windows)
-			return deinitSucceeded;
-		else
-			return Runtime.terminate() && deinitSucceeded;
+		return __deinitDPlugin(&deinitFunc, plugin_handle);
 	}
 }
 
@@ -132,6 +147,7 @@ void writefln(FmtArgs...)(const(char)[] fmt, FmtArgs fmtArgs)
 {
 	static if(fmtArgs.length != 0)
 	{
+		import std.format : format;
 		fmt = format(fmt, fmtArgs);
 	}
 
@@ -142,6 +158,7 @@ void commandf(FmtArgs...)(const(char)[] fmt, FmtArgs fmtArgs)
 {
 	static if(fmtArgs.length != 0)
 	{
+		import std.format : format;
 		fmt = format(fmt, fmtArgs);
 	}
 
@@ -150,11 +167,15 @@ void commandf(FmtArgs...)(const(char)[] fmt, FmtArgs fmtArgs)
 
 string getInfo(in char[] id)
 {
+	import std.conv : to;
+	import std.string : toStringz;
+
 	return to!string((hexchat_get_info(ph, toStringz(id))));
 }
 
 void readInfo(in char[] id, void delegate(in char[] info) dg)
 {
+	import std.string : fromStringz, toStringz;
 	dg(fromStringz(hexchat_get_info(ph, toStringz(id))));
 }
 
@@ -165,6 +186,9 @@ struct User
 
 User parseUser(const(char)[] user)
 {
+	import std.array : popFront;
+	import std.string : munch;
+
 	auto nick = user.munch("^!");
 	auto userName = user.munch("^@");
 
@@ -199,6 +223,8 @@ private alias const(char)[][PDIWORDS] WordBuffer;
 // TODO: Really inefficent for words_eol
 private const(char)[][] getWords(const(char)** cwords, ref const(char)[][PDIWORDS] words)
 {
+	import std.string : fromStringz;
+
 	foreach(i; 1 .. PDIWORDS)
 	{
 		auto cword = cwords[i];
@@ -235,6 +261,8 @@ void hookServer(in char[] type,
 				 EatMode function(in char[][] words, in char[][] words_eol) callback,
 				 CommandPriority priority = CommandPriority.normal)
 {
+	import std.string : toStringz;
+
 	alias typeof(callback) Callback; // Workaround for older compiler versions
 
 	extern(C) static int hexchat_serv_cb(const(char)** cwords, const(char)** cwords_eol, void* ud)
@@ -256,6 +284,8 @@ void hookServer(in char[] type,
 				EatMode delegate(in char[][] words, in char[][] words_eol) callback,
 				CommandPriority priority = CommandPriority.normal)
 {
+	import std.string : toStringz;
+
 	static struct CallbackData
 	{
 		typeof(callback) cb;
@@ -292,6 +322,7 @@ void hookCommand(in char[] cmd,
 				 in char[] helpText = null,
 				 CommandPriority priority = CommandPriority.normal)
 {
+	import std.string : toStringz;
 
 	alias typeof(callback) Callback; // Workaround for older compiler versions
 
@@ -315,6 +346,8 @@ void hookCommand(in char[] cmd,
 				 in char[] helpText = null,
 				 CommandPriority priority = CommandPriority.normal)
 {
+	import std.string : toStringz;
+
 	static struct CallbackData
 	{
 		typeof(callback) cb;
@@ -352,6 +385,8 @@ void hookPrint(in char[] name,
 			   EatMode function(in char[][] words) callback,
 			   CommandPriority priority = CommandPriority.normal)
 {
+	import std.string : toStringz;
+
 	alias typeof(callback) Callback; // Workaround for older compiler versions
 
 	extern(C) static int hexchat_print_cb(const(char)** cwords, void* ud)
@@ -372,6 +407,8 @@ void hookPrint(in char[] name,
 			   EatMode delegate(in char[][] words) callback,
 			   CommandPriority priority = CommandPriority.normal)
 {
+	import std.string : toStringz;
+
 	static struct CallbackData
 	{
 		typeof(callback) cb;
