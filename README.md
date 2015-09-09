@@ -11,8 +11,10 @@ Bindings for the original C interface are also included.
  * `lib` - library files for the high level interface (when built).
  * `example` - *hexchatd* examples.
 
-## Documentation
-Documentation coming soon.
+## [Documentation](https://jakobovrum.github.io/hexchatd/hexchat.plugin.html)
+Documentation generated with [bootDoc](https://github.com/JakobOvrum/bootDoc) can be found
+on the [gh-pages branch](https://github.com/JakobOvrum/hexchatd/tree/gh-pages), or [browsed 
+online](https://jakobovrum.github.io/hexchatd/hexchat.plugin.html).
 
 For documentation on the C interface, see the
 [HexChat plugin documentation](https://github.com/hexchat/hexchat/wiki/Plugins).
