@@ -13,6 +13,7 @@
 
 # Dub
 /.dub
+/dub.selections.json
 
 # Temporary files
 *.swp
