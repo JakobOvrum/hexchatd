@@ -1,0 +1,31 @@
+sudo: false
+
+language: d
+
+os:
+ - linux
+
+d:
+ - dmd-2.068.0
+
+addons:
+  apt:
+    packages:
+    - gcc-multilib
+
+notifications:
+  email: false
+
+env:
+  global:
+    secure: Hi3gL0DN+PHupzzb+fA7r7uklB/Gc7qFYVlvmEGvIKf8q4uMq/lpA3RK7WziYQij8m6WhpLNy3CzKC/ydI6yu17DBi07MKCZ4kJ7yINFxyL03qtxYA1vsFgLsaaOvzvOEs1KHiVNLAI7h0KQPPA5YS+cMxnFREyFKPQVXkf79vo=
+  matrix:
+   - ARCH=x86
+   - ARCH=x86_64
+
+script:
+ - dub test --arch=$ARCH
+
+after_success:
+ - "./push-ddoc.sh"
+

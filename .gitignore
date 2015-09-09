@@ -17,3 +17,6 @@
 # Temporary files
 *.swp
 
+# Documentation generation
+/gh-pages
+
