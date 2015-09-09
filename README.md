@@ -1,5 +1,4 @@
-# hexchatd [![dub](https://img.shields.io/dub/v/hexchatd.svg)](http://code.dlang.org/packages/hexchatd) [![Build 
-Status](https://travis-ci.org/JakobOvrum/hexchatd.svg?branch=master)](https://travis-ci.org/JakobOvrum/hexchatd)
+# hexchatd [![dub](https://img.shields.io/dub/v/hexchatd.svg)](http://code.dlang.org/packages/hexchatd) [![Build Status](https://travis-ci.org/JakobOvrum/hexchatd.svg?branch=master)](https://travis-ci.org/JakobOvrum/hexchatd)
 
 *hexchatd* is a plugin interface for HexChat and XChat built on the C interface,
 allowing for plugins written in the D programming language.
