@@ -2,7 +2,7 @@ PROJECTNAME = hexchatd
 REFERENCETOP = hexchat.plugin.html
 REPOSRCTREE = http://github.com/JakobOvrum/hexchatd/tree/master
 TITLEBARTEXT = <a href="https://github.com/JakobOvrum/hexchatd">Github Page</a>
-RESOURCEROOT =
+RESOURCEROOT = bootDoc/
 ISSUETRACKER = https://github.com/JakobOvrum/hexchatd/issues/$1
 DEFAULTPACKAGE = hexchat
 PACKAGESEP = .
