@@ -1,0 +1,15 @@
+PROJECTNAME = hexchatd
+REFERENCETOP = hexchat.plugin.html
+REPOSRCTREE = http://github.com/JakobOvrum/hexchatd/tree/master
+TITLEBARTEXT = <a href="https://github.com/JakobOvrum/hexchatd">Github Page</a>
+RESOURCEROOT =
+ISSUETRACKER = https://github.com/JakobOvrum/hexchatd/issues/$1
+DEFAULTPACKAGE = hexchat
+PACKAGESEP = .
+FAVICON = $(RESOURCEROOT)assets/ico/favicon.ico
+LOGOSRC = $(RESOURCEROOT)assets/img/icon-github.png
+LOGOALT = $(PROJECTNAME)
+LOGOLINK = $(REFERENCETOP)
+COPYRIGHT = Jakob Øvrum
+COPYRIGHTFOOTER = &copy; $(COPYRIGHT) 2012-$(YEAR)
+
