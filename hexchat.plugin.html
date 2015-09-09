@@ -120,15 +120,18 @@
 <div class="declaration-content"><br><br>
 <div class="offset1 member-list"><hr><div class="row-fluid declaration"><h3>string <span class="symbol-target" id="name">&nbsp;</span><a class="symbol-link" href="#name">name</a>;
 </h3></div>
-<div class="declaration-content"><br><br>
+<div class="declaration-content"><dl><p>Name of this plugin.</p>
+</dl>
 </div>
 <hr><div class="row-fluid declaration"><h3>string <span class="symbol-target" id="description">&nbsp;</span><a class="symbol-link" href="#description">description</a>;
 </h3></div>
-<div class="declaration-content"><br><br>
+<div class="declaration-content"><dl><p>Description for this plugin.</p>
+</dl>
 </div>
 <hr><div class="row-fluid declaration"><h3>string <span class="symbol-target" id="version_">&nbsp;</span><a class="symbol-link" href="#version_">version_</a>;
 </h3></div>
-<div class="declaration-content"><br><br>
+<div class="declaration-content"><dl><p>Version string for this plugin.</p>
+</dl>
 </div>
 </div>
 </div>
@@ -146,11 +149,23 @@
 </div>
 </div>
 </div>
-<hr><div class="row-fluid declaration"><h3>template <span class="symbol-target" id="Plugin">&nbsp;</span><a class="symbol-link" href="#Plugin">Plugin</a>(alias initFunc, PluginStyle style = PluginStyle.hexchat) if (is(typeof(initFunc(lvalueOf!PluginInfo))))</h3></div>
-<div class="declaration-content"><br><br>
-</div>
-<hr><div class="row-fluid declaration"><h3>template <span class="symbol-target" id="Plugin">&nbsp;</span><a class="symbol-link" href="#Plugin">Plugin</a>(alias initFunc, alias deinitFunc, PluginStyle style = PluginStyle.hexchat)</h3></div>
-<div class="declaration-content"><br><br>
+<hr><div class="row-fluid declaration"><h3>template <span class="symbol-target" id="Plugin">&nbsp;</span><a class="symbol-link" href="#Plugin">Plugin</a>(alias initFunc, PluginStyle style = PluginStyle.hexchat) if (is(typeof(initFunc(lvalueOf!PluginInfo))))<br>template <span class="symbol-target" id="Plugin">&nbsp;</span><a class="symbol-link" href="#Plugin">Plugin</a>(alias initFunc, alias deinitFunc, PluginStyle style = PluginStyle.hexchat)</h3></div>
+<div class="declaration-content"><dl><p>Generate entry and exit points for this plugin.
+</p>
+<dt>Parameters</dt><dd><table class="table table-condensed table-bordered"><tr><td>initFunc</td>
+<td>plugin initialization function. Must take one parameter of
+ type <a class="symbol-link" href="#PluginInfo"><span class="inlinecode">PluginInfo</span></a> by reference. Run when the plugin is loaded by the
+ IRC client. Set the <a class="symbol-link" href="#PluginInfo"><span class="inlinecode">PluginInfo</span></a>'s fields to configure those properties
+ of this plugin.</td></tr>
+<tr><td>deinitFunc</td>
+<td>plugin de-initialization function. Must take no parameters.
+ Run when then plugin is unloaded by the IRC client. Optional.</td></tr>
+<tr><td>style</td>
+<td>ABI to follow. Use <span class="inlinecode">PluginStyle.hexchat</span> for HexChat plugins
+ and <span class="inlinecode">PluginStyle.xchat</span> for plugins for other clients. The two ABIs are
+ <b>not</b> cross-compatible.</td></tr>
+</table></dd>
+</dl>
 </div>
 <hr><div class="row-fluid declaration"><h3>enum <span class="symbol-target" id="EatMode">&nbsp;</span><a class="symbol-link" href="#EatMode">EatMode</a>: int;
 </h3></div>
