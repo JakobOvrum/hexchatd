@@ -8,9 +8,9 @@ private __gshared hexchat_plugin* ph; // Plugin handle
 ///
 struct PluginInfo
 {
-	string name; ///
-	string description; ///
-	string version_; ///
+	string name; /// Name of this plugin.
+	string description; /// Description for this plugin.
+	string version_; /// Version string for this plugin.
 }
 
 private __gshared PluginInfo pluginInfo;
@@ -116,7 +116,22 @@ int __deinitDPlugin(DeinitFunc)(DeinitFunc deinitFunc, void* ph)
 }
 
 
-///
+/**
+ * Generate entry and exit points for this plugin.
+ *
+ * Params:
+ *    initFunc = plugin initialization function. Must take one parameter of
+ * type $(LREF PluginInfo) by reference. Run when the plugin is loaded by the
+ * IRC client. Set the $(LREF PluginInfo)'s fields to configure those properties
+ * of this plugin.
+ *
+ *    deinitFunc = plugin de-initialization function. Must take no parameters.
+ * Run when then plugin is unloaded by the IRC client. Optional.
+ *
+ *    style = ABI to follow. Use $(D PluginStyle.hexchat) for HexChat plugins
+ * and $(D PluginStyle.xchat) for plugins for other clients. The two ABIs are
+ * $(B not) cross-compatible.
+ */
 mixin template Plugin(alias initFunc, PluginStyle style = PluginStyle.hexchat)
 	if(is(typeof(initFunc(lvalueOf!PluginInfo))))
 {
@@ -131,7 +146,7 @@ mixin template Plugin(alias initFunc, PluginStyle style = PluginStyle.hexchat)
 	}
 }
 
-///
+/// Ditto
 mixin template Plugin(alias initFunc, alias deinitFunc, PluginStyle style = PluginStyle.hexchat)
 {
 	mixin Plugin!(initFunc, style);
