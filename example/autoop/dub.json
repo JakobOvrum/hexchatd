@@ -1,0 +1,13 @@
+{
+	"name": "autoop",
+	"description": "Example plugin which automatically ops joining users",
+	
+	"targetType": "dynamicLibrary",
+	"targetPath": ".",
+	"sourcePaths": ["source"],
+
+	"dependencies": {
+		"hexchatd": {"version": "~master", "path": "../../"}
+	}
+}
+

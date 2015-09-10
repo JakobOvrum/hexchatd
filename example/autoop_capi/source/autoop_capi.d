@@ -12,10 +12,11 @@ int enable = 1;
 
 extern(C):
 
-// The first exported C symbol always gets a preceeding
-// underscore on Windows with DMD/OPTLINK, but xchat
-// expects "xchat_plugin_init" exactly.
-version(Windows) export void _systemconvdummy() {}
+version(Windows)
+{
+   import core.sys.windows.dll : SimpleDllMain;
+   mixin SimpleDllMain;
+}
 
 int join_cb(const(char)** word, void* userdata)
 {

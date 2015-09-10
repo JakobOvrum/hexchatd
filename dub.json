@@ -13,6 +13,11 @@
 	"dflags-linux": ["-fPIC"],
 
 	"sourcePaths": ["source"],
-	"importPaths": ["source"]
+	"importPaths": ["source"],
+
+	"subPackages": [
+		"./example/autoop/",
+		"./example/autoop_capi/"
+	]
 }
 

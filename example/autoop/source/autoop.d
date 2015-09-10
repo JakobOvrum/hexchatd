@@ -2,6 +2,12 @@ module example.autoop;
 
 import hexchat.plugin;
 
+version(Windows)
+{
+   import core.sys.windows.dll : SimpleDllMain;
+   mixin SimpleDllMain;
+}
+
 bool enabled = true;
 
 EatMode join(in char[][] words)

@@ -3,7 +3,7 @@
 /lib32
 
 # Example Binaries
-/example/bin
+/example/*/*.so
 
 # Visual Studio
 *.suo
@@ -12,8 +12,8 @@
 /devenv
 
 # Dub
-/.dub
-/dub.selections.json
+.dub/
+dub.selections.json
 
 # Temporary files
 *.swp
