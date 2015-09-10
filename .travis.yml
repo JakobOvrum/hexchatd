@@ -25,6 +25,7 @@ env:
 
 script:
  - dub build --arch=$ARCH
+ - for ex in `\ls -1 example/`; do (echo "[INFO] Building example $ex"; cd example/$ex && dub build --arch=$ARCH) || exit 1; done
 
 after_success:
  - "./push-ddoc.sh"
